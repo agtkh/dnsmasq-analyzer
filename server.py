@@ -8,6 +8,7 @@ Date: 2024/09/06
 
 import time
 import os
+import sys
 import stat
 import publicsuffix2
 import pymysql
@@ -25,6 +26,11 @@ def main():
 
     # ログファイルのパス
     log_filename = os.getenv("DNSMASQ_ANLZR_LOG_FILENAME")
+    print(f"{host=}", file=sys.stderr)
+    print(f"{user=}", file=sys.stderr)
+    print(f"{password=}", file=sys.stderr)
+    print(f"{database=}", file=sys.stderr)
+    print(f"{log_filename=}", file=sys.stderr)
 
     db = Database(host, user, password, database)
 
@@ -37,7 +43,6 @@ class Database:
         self.conn = pymysql.connect(
             host=host, user=user, password=password, database=database
         )
-        self.cursor = self.conn.cursor()
 
     def increment_count(self, date_str, domain_name, source):
         sql = """
@@ -45,28 +50,29 @@ class Database:
             VALUES (%s, %s, %s, NOW())
             ON DUPLICATE KEY UPDATE count = count + 1, last = NOW()
         """
-
-        self.cursor.execute(sql, (domain_name, source, 1))
+        with self.conn.cursor() as cursor:
+            cursor.execute(sql, (domain_name, source, 1))
         self.conn.commit()
-        # print(date_str, domain_name, source)
 
     def check_title_exists(self, url):
-        sql = " SELECT COUNT(*) FROM titles WHERE url = %s "
-        self.cursor.execute(sql, (url,))
-        res = self.cursor.fetchone()
-        assert res is not None
-        return res[0]
+        with self.conn.cursor() as cursor:
+            sql = "SELECT COUNT(*) FROM titles WHERE url=%s"
+            cursor.execute(sql, (url,))
+            res = cursor.fetchone()
+        if res is None:
+            print("warning", file=sys.stderr)
+        return res is None or  res[0]
 
     def insert_title(self, url):
         title = get_website_title(url)
-        # print(f"insert {url=}, {title=}")
-        sql = "INSERT INTO titles (url, title) VALUES (%s, %s)"
-        self.cursor.execute(sql, (url, title))
+        
+        with self.conn.cursor() as cursor:
+            sql = "INSERT INTO titles (url, title) VALUES (%s, %s)"
+            cursor.execute(sql, (url, title))
         self.conn.commit()
 
     def __del__(self):
-        self.cursor.close()
-        self.conn.close()
+        if hasattr(self, 'conn'):  self.conn.close()
 
 
 def get_website_title(url):

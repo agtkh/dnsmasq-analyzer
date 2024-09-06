@@ -25,7 +25,7 @@ pip install -r requirements.txt
 # 
 cp dnsmasq-analyzer.service /usr/lib/systemd/system/
 systemctl daemon-reload
-systemctl enable start dnsmasq-analyzer
-systemctl start start dnsmasq-analyzer
-systemctl status status dnsmasq-analyzer
+systemctl enable dnsmasq-analyzer
+systemctl start dnsmasq-analyzer
+systemctl status dnsmasq-analyzer
 ```

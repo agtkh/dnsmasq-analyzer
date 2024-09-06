@@ -1,7 +1,7 @@
 
 [Unit]
 Description = This is a dnsmasq log analyzer
-After=dnsmasq
+After=dnsmasq.service
 
 [Service]
 ExecStart = /usr/bin/python3 /etc/dnsmasq-analyzer/server.py
