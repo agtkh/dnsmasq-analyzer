@@ -46,7 +46,7 @@ class Database:
 
     def increment_count(self, date_str, domain_name, source):
         sql = """
-            INSERT IGNORE INTO queries (domain_name, source, count, last)
+            INSERT INTO queries (domain_name, source, count, last)
             VALUES (%s, %s, %s, NOW())
             ON DUPLICATE KEY UPDATE count = count + 1, last = NOW()
         """
@@ -67,7 +67,7 @@ class Database:
         title = get_website_title(url)
         
         with self.conn.cursor() as cursor:
-            sql = "INSERT INTO titles (url, title) VALUES (%s, %s)"
+            sql = "INSERT IGNORE INTO titles (url, title) VALUES (%s, %s)"
             cursor.execute(sql, (url, title))
         self.conn.commit()
 
@@ -134,8 +134,6 @@ class DnsmasqAnalyzer:
 
         if not self.db.check_title_exists(domain_name):
             threading.Thread(target=self.db.insert_title, args=(domain_name,)).start()
-        # else:
-        # print(f"exists: {domain_name}")
 
     def __del__(self):
         assert not self.file.close()
