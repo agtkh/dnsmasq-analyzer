@@ -1,0 +1,14 @@
+
+[Unit]
+Description = This is a dnsmasq log analyzer
+After=dnsmasq
+
+[Service]
+ExecStart = /usr/bin/python3 /etc/dnsmasq-analyzer/server.py
+EnvironmentFile = /etc/dnsmasq-analyzer/env
+Restart = always
+Type = simple
+RestartSec=2
+
+[Install]
+WantedBy = multi-user.target
